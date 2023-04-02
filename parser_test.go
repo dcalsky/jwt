@@ -54,6 +54,7 @@ var jwtTestData = []struct {
 	err           []error
 	parser        *jwt.Parser
 	signingMethod jwt.SigningMethod // The method to sign the JWT token for test purpose
+	options       []jwt.ParserOption
 }{
 	{
 		"invalid JWT",
@@ -64,6 +65,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenMalformed},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"invalid JSON claim",
@@ -74,6 +76,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenMalformed},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"bearer in JWT",
@@ -84,6 +87,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenMalformed},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"basic",
@@ -94,6 +98,7 @@ var jwtTestData = []struct {
 		nil,
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"basic expired",
@@ -104,6 +109,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenExpired},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"basic nbf",
@@ -114,6 +120,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenNotValidYet},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"expired and nbf",
@@ -124,6 +131,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenNotValidYet, jwt.ErrTokenExpired},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"basic invalid",
@@ -134,6 +142,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenSignatureInvalid, rsa.ErrVerification},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"basic nokeyfunc",
@@ -144,6 +153,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenUnverifiable},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"basic nokey",
@@ -154,6 +164,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenSignatureInvalid},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"basic errorkey",
@@ -164,6 +175,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenUnverifiable, errKeyFuncError},
 		nil,
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"invalid signing method",
@@ -174,6 +186,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenSignatureInvalid},
 		jwt.NewParser(jwt.WithValidMethods([]string{"HS256"})),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"valid RSA signing method",
@@ -184,6 +197,7 @@ var jwtTestData = []struct {
 		nil,
 		jwt.NewParser(jwt.WithValidMethods([]string{"RS256", "HS256"})),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"ECDSA signing method not accepted",
@@ -194,6 +208,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenSignatureInvalid},
 		jwt.NewParser(jwt.WithValidMethods([]string{"RS256", "HS256"})),
 		jwt.SigningMethodES256,
+		nil,
 	},
 	{
 		"valid ECDSA signing method",
@@ -204,6 +219,7 @@ var jwtTestData = []struct {
 		nil,
 		jwt.NewParser(jwt.WithValidMethods([]string{"HS256", "ES256"})),
 		jwt.SigningMethodES256,
+		nil,
 	},
 	{
 		"JSON Number",
@@ -214,6 +230,7 @@ var jwtTestData = []struct {
 		nil,
 		jwt.NewParser(jwt.WithJSONNumber()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"JSON Number - basic expired",
@@ -224,6 +241,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenExpired},
 		jwt.NewParser(jwt.WithJSONNumber()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"JSON Number - basic nbf",
@@ -234,6 +252,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenNotValidYet},
 		jwt.NewParser(jwt.WithJSONNumber()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"JSON Number - expired and nbf",
@@ -244,6 +263,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenNotValidYet, jwt.ErrTokenExpired},
 		jwt.NewParser(jwt.WithJSONNumber()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"SkipClaimsValidation during token parsing",
@@ -254,6 +274,7 @@ var jwtTestData = []struct {
 		nil,
 		jwt.NewParser(jwt.WithJSONNumber(), jwt.WithoutClaimsValidation()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"RFC7519 Claims",
@@ -266,6 +287,7 @@ var jwtTestData = []struct {
 		nil,
 		jwt.NewParser(jwt.WithJSONNumber()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"RFC7519 Claims - single aud",
@@ -278,6 +300,7 @@ var jwtTestData = []struct {
 		nil,
 		jwt.NewParser(jwt.WithJSONNumber()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"RFC7519 Claims - multiple aud",
@@ -290,6 +313,7 @@ var jwtTestData = []struct {
 		nil,
 		jwt.NewParser(jwt.WithJSONNumber()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"RFC7519 Claims - single aud with wrong type",
@@ -302,6 +326,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenMalformed},
 		jwt.NewParser(jwt.WithJSONNumber()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"RFC7519 Claims - multiple aud with wrong types",
@@ -314,6 +339,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenMalformed},
 		jwt.NewParser(jwt.WithJSONNumber()),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"RFC7519 Claims - nbf with 60s skew",
@@ -324,6 +350,7 @@ var jwtTestData = []struct {
 		[]error{jwt.ErrTokenNotValidYet},
 		jwt.NewParser(jwt.WithLeeway(time.Minute)),
 		jwt.SigningMethodRS256,
+		nil,
 	},
 	{
 		"RFC7519 Claims - nbf with 120s skew",
@@ -334,6 +361,29 @@ var jwtTestData = []struct {
 		nil,
 		jwt.NewParser(jwt.WithLeeway(2 * time.Minute)),
 		jwt.SigningMethodRS256,
+		nil,
+	},
+	{
+		"custom json encoder",
+		"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+		defaultKeyFunc,
+		jwt.MapClaims{"foo": "bar"},
+		true,
+		nil,
+		nil,
+		jwt.SigningMethodRS256,
+		[]jwt.ParserOption{jwt.WithJSONEncoder(&customJSONEncoder{})},
+	},
+	{
+		"custom base64 encoder",
+		"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+		defaultKeyFunc,
+		jwt.MapClaims{"foo": "bar"},
+		true,
+		nil,
+		nil,
+		jwt.SigningMethodRS256,
+		[]jwt.ParserOption{jwt.WithBase64Encoder(&customBase64Encoder{})},
 	},
 }
 
@@ -367,7 +417,7 @@ func TestParser_Parse(t *testing.T) {
 			var err error
 			var parser = data.parser
 			if parser == nil {
-				parser = jwt.NewParser()
+				parser = jwt.NewParser(data.options...)
 			}
 			// Figure out correct claims type
 			switch data.claims.(type) {

@@ -125,3 +125,16 @@ func WithStrictDecoding() ParserOption {
 		p.decodeStrict = true
 	}
 }
+
+// WithJSONEncoder supports
+func WithJSONEncoder(enc JSONEncoder) ParserOption {
+	return func(p *Parser) {
+		p.jsonEncoder = enc
+	}
+}
+
+func WithBase64Encoder(enc Base64Encoder) ParserOption {
+	return func(p *Parser) {
+		p.base64Encoder = enc
+	}
+}

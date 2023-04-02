@@ -12,7 +12,7 @@ type Parser struct {
 	// If populated, only these methods will be considered valid.
 	validMethods []string
 
-	// Use JSON Number format in JSON decoder.
+	// Use JSON Number format in JSON decoder. This field is disabled when using a custom json encoder.
 	useJSONNumber bool
 
 	// Skip claims validation during token parsing.
@@ -20,9 +20,17 @@ type Parser struct {
 
 	validator *validator
 
+	// This field is disabled when using a custom base64 encoder.
 	decodeStrict bool
 
+	// This field is disabled when using a custom base64 encoder.
 	decodePaddingAllowed bool
+
+	// Custom base64 encoder.
+	base64Encoder Base64Encoder
+
+	// Custom json encoder.
+	jsonEncoder JSONEncoder
 }
 
 // NewParser creates a new Parser with the specified options
@@ -135,7 +143,12 @@ func (p *Parser) ParseUnverified(tokenString string, claims Claims) (token *Toke
 		}
 		return token, parts, newError("could not base64 decode header", ErrTokenMalformed, err)
 	}
-	if err = json.Unmarshal(headerBytes, &token.Header); err != nil {
+	if p.jsonEncoder != nil {
+		err = p.jsonEncoder.Unmarshal(headerBytes, &token.Header)
+	} else {
+		err = json.Unmarshal(headerBytes, &token.Header)
+	}
+	if err != nil {
 		return token, parts, newError("could not JSON decode header", ErrTokenMalformed, err)
 	}
 
@@ -146,21 +159,30 @@ func (p *Parser) ParseUnverified(tokenString string, claims Claims) (token *Toke
 	if claimBytes, err = p.DecodeSegment(parts[1]); err != nil {
 		return token, parts, newError("could not base64 decode claim", ErrTokenMalformed, err)
 	}
-	dec := json.NewDecoder(bytes.NewBuffer(claimBytes))
-	if p.useJSONNumber {
-		dec.UseNumber()
-	}
+
 	// JSON Decode.  Special case for map type to avoid weird pointer behavior
-	if c, ok := token.Claims.(MapClaims); ok {
-		err = dec.Decode(&c)
+	mapClaims, isMapClaims := token.Claims.(MapClaims)
+	if p.jsonEncoder != nil {
+		if isMapClaims {
+			err = p.jsonEncoder.Unmarshal(claimBytes, &mapClaims)
+		} else {
+			err = p.jsonEncoder.Unmarshal(claimBytes, &claims)
+		}
 	} else {
-		err = dec.Decode(&claims)
+		decoder := json.NewDecoder(bytes.NewBuffer(claimBytes))
+		if p.useJSONNumber {
+			decoder.UseNumber()
+		}
+		if isMapClaims {
+			err = decoder.Decode(&mapClaims)
+		} else {
+			err = decoder.Decode(&claims)
+		}
 	}
 	// Handle decode error
 	if err != nil {
 		return token, parts, newError("could not JSON decode claim", ErrTokenMalformed, err)
 	}
-
 	// Lookup signature method
 	if method, ok := token.Header["alg"].(string); ok {
 		if token.Method = GetSigningMethod(method); token.Method == nil {
@@ -177,6 +199,10 @@ func (p *Parser) ParseUnverified(tokenString string, claims Claims) (token *Toke
 // take into account whether the [Parser] is configured with additional options,
 // such as [WithStrictDecoding] or [WithPaddingAllowed].
 func (p *Parser) DecodeSegment(seg string) ([]byte, error) {
+	if p.base64Encoder != nil {
+		return p.base64Encoder.DecodeString(seg)
+	}
+
 	encoding := base64.RawURLEncoding
 
 	if p.decodePaddingAllowed {

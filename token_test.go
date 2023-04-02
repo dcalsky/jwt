@@ -14,6 +14,7 @@ func TestToken_SigningString(t1 *testing.T) {
 		Claims    jwt.Claims
 		Signature []byte
 		Valid     bool
+		Options   []jwt.TokenOption
 	}
 	tests := []struct {
 		name    string
@@ -30,8 +31,28 @@ func TestToken_SigningString(t1 *testing.T) {
 					"typ": "JWT",
 					"alg": jwt.SigningMethodHS256.Alg(),
 				},
+				Claims:  jwt.RegisteredClaims{},
+				Valid:   false,
+				Options: nil,
+			},
+			want:    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30",
+			wantErr: false,
+		},
+		{
+			name: "",
+			fields: fields{
+				Raw:    "",
+				Method: jwt.SigningMethodHS256,
+				Header: map[string]interface{}{
+					"typ": "JWT",
+					"alg": jwt.SigningMethodHS256.Alg(),
+				},
 				Claims: jwt.RegisteredClaims{},
 				Valid:  false,
+				Options: []jwt.TokenOption{
+					jwt.WithTokenJSONEncoder(&customJSONEncoder{}),
+					jwt.WithTokenBase64Encoder(&customBase64Encoder{}),
+				},
 			},
 			want:    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30",
 			wantErr: false,
